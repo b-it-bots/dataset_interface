@@ -7,7 +7,7 @@ class SiameseNetwork(nn.Module):
     def __init__(self):
         super(SiameseNetwork, self).__init__()
         self.cnn1 = nn.Sequential(nn.ReflectionPad2d(1),
-                                  nn.Conv2d(1, 4, kernel_size=3),
+                                  nn.Conv2d(3, 4, kernel_size=3),
                                   nn.ReLU(inplace=True),
                                   nn.BatchNorm2d(4),
 
@@ -25,7 +25,9 @@ class SiameseNetwork(nn.Module):
                                  nn.ReLU(inplace=True),
                                  nn.Linear(500, 500),
                                  nn.ReLU(inplace=True),
-                                 nn.Linear(500, 5))
+                                 nn.Linear(500, 250),
+                                 nn.ReLU(inplace=True),
+                                 nn.Linear(250, 50))
 
     def forward_once(self, x):
         output = self.cnn1(x)
