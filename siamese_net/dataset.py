@@ -15,36 +15,43 @@ class SiameseNetworkDataset(Dataset):
         self.should_invert = should_invert
 
     def __getitem__(self, index):
-        img0_tuple = random.choice(self.image_folder_dataset.imgs)
+        anchor_tuple = random.choice(self.image_folder_dataset.imgs)
+        positive_tuple = self._get_img(*anchor_tuple, True)
+        negative_tuple = self._get_img(*anchor_tuple, False)
 
+        anchor_img = Image.open(anchor_tuple[0])
+        positive_img = Image.open(positive_tuple[0])
+        negative_img = Image.open(negative_tuple[0])
+
+        if self.should_invert:
+            anchor_img = ImageOps.invert(anchor_img)
+            positive_img = ImageOps.invert(positive_img)
+            negative_img = ImageOps.invert(negative_img)
+
+        if self.transform is not None:
+            anchor_img = self.transform(anchor_img)
+            positive_img = self.transform(positive_img)
+            negative_img = self.transform(negative_img)
+
+        return anchor_img, positive_img, negative_img
+
+    def _get_img(self, img_path, class_id, should_get_same_class):
         # we need to make sure approx 50% of images are in the same class
         should_get_same_class = random.randint(0, 1)
+        img_tuple = None
         if should_get_same_class:
             while True:
                 # keep looping till the same class image is found
-                img1_tuple = random.choice(self.image_folder_dataset.imgs)
-                if img0_tuple[1] == img1_tuple[1]:
+                img_tuple = random.choice(self.image_folder_dataset.imgs)
+                if class_id == img_tuple[1] and img_path != img_tuple[0]:
                     break
         else:
             while True:
                 # keep looping till a different class image is found
-                img1_tuple = random.choice(self.image_folder_dataset.imgs)
-                if img0_tuple[1] != img1_tuple[1]:
+                img_tuple = random.choice(self.image_folder_dataset.imgs)
+                if class_id != img_tuple[1]:
                     break
-
-        img0 = Image.open(img0_tuple[0])
-        img1 = Image.open(img1_tuple[0])
-
-        if self.should_invert:
-            img0 = ImageOps.invert(img0)
-            img1 = ImageOps.invert(img1)
-
-        if self.transform is not None:
-            img0 = self.transform(img0)
-            img1 = self.transform(img1)
-
-        return img0, img1, torch.from_numpy(np.array([int(img1_tuple[1] != img0_tuple[1])],
-                                                     dtype=np.float32))
+        return img_tuple
 
     def __len__(self):
         return len(self.image_folder_dataset.imgs)

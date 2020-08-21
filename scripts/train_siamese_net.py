@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     model = SiameseNetwork()
-    criterion = ContrastiveLoss()
+    criterion = torch.nn.TripletMarginLoss(margin=0.1)
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
 
@@ -96,17 +96,15 @@ if __name__ == '__main__':
     for epoch in range(num_epochs):
         losses = []
         for i, data in enumerate(train_dataloader):
-            img0, img1, label = data
+            anchor, positive, negative = data
             optimizer.zero_grad()
-            output1, output2 = model(img0, img1)
-            loss_contrastive = criterion(output1, output2, label)
+            output1, output2, output3 = model(anchor, positive, negative)
+            loss_contrastive = criterion(output1, output2, output3)
             loss_contrastive.backward()
             optimizer.step()
-            if i % 10 == 0:
-                print('Epoch number {}\n Current loss {}\n'.format(epoch,
-                                                                   loss_contrastive.item()))
             losses.append(loss_contrastive.item())
         avg_loss = np.mean(losses)
+        print('Epoch number {}\n Average loss {}\n'.format(epoch, avg_loss))
 
         if train_loss_file_path:
             with open(train_loss_file_path, 'a+') as loss_file:
