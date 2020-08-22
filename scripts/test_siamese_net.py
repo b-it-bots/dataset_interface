@@ -11,7 +11,7 @@ import torch
 import torch.nn as nn
 
 from dataset_interface.siamese_net.model import SiameseNetwork
-from dataset_interface.siamese_net.utils import get_grayscale_image_tensor
+from dataset_interface.siamese_net.utils import get_image_tensor
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
@@ -37,9 +37,10 @@ if __name__ == '__main__':
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     model.to(device)
 
-    img0 = get_grayscale_image_tensor(img1_path)
-    img1 = get_grayscale_image_tensor(img2_path)
+    img0 = get_image_tensor(img1_path)
+    img1 = get_image_tensor(img2_path)
 
-    out1, out2 = model(img0, img1)
+    out1 = model.forward_once(img0)
+    out2 = model.forward_once(img1)
     distance = nn.functional.pairwise_distance(out1, out2)
     print('Distance: {0}'.format(distance.item()))
