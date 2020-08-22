@@ -6,7 +6,7 @@ def get_transforms():
                                     transforms.ToTensor()])
     return transform
 
-def get_grayscale_image_tensor(img_path):
+def get_image_tensor(img_path):
     img = Image.open(img_path)
     img = get_transforms()(img)
     img.unsqueeze_(0)
