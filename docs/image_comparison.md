@@ -62,3 +62,11 @@ An example call is given below:
 -i2 /home/lucy/img2.jpg \
 -m /home/lucy/models/model.pt
 ```
+
+# Collecting Person Face Images
+
+The simple `collect_person_images.py` script is used to capture images of a person standing in front of the robot, and segmenting out their face using the [face_recognition](https://github.com/ageitgey/face_recognition) library. The resultant images are then saved in the desired directory. This has been used to collect images to train a Siamese network for recognizing people. This script takes the following arguments:
+
+* `-p --person_name`: The name of the person (a personal directory will be created for their images)
+* `-n --num_images`: Number of images to be collected (default `10`)
+* `-d --dir_path`: Path to a directory where the person image directory is to be saved.
