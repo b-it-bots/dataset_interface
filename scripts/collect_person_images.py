@@ -37,10 +37,14 @@ if __name__ == '__main__':
                         help='The number of images to be taken.')
     parser.add_argument('-d', '--dir_path', type=str,
                         help='The path where the images will be saved.')
+    parser.add_argument('-t', '--image_topic', type=str,
+                        default='/hsrb/head_rgbd_sensor/rgb/image_raw',
+                        help='The topic on which the images are published.')
 
     person_name = parser.parse_args().person_name
     num_images = int(parser.parse_args().num_images)
     dir_path = parser.parse_args().dir_path
+    image_topic = parser.parse_args().image_topic
     
     person_dir_path = os.path.join(dir_path, person_name)
     try:
@@ -49,7 +53,7 @@ if __name__ == '__main__':
         pass
 
     rospy.init_node('collect_face_images_test')
-    rospy.Subscriber('/hsrb/head_rgbd_sensor/rgb/image_raw', Image, image_cb)
+    rospy.Subscriber(image_topic, Image, image_cb)
     say_pub = rospy.Publisher('/say', String, queue_size=1)
     
     while current_img is None:
