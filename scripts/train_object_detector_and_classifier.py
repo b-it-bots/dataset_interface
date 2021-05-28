@@ -57,6 +57,9 @@ if __name__ == '__main__':
                            choices=['voc', 'custom'],
                            help='Data annotation type (voc or custom)',
                            default='voc')
+    argparser.add_argument('-cp', '--checkpoint_path', type=str,
+                           help='Path to a checkpoint (model + optimizer state) for resuming training',
+                           default=None)
 
     # we read all arguments
     args = argparser.parse_args()
@@ -69,6 +72,7 @@ if __name__ == '__main__':
     training_batch_size = args.training_batch_size
     learning_rate = args.learning_rate
     annotation_type = args.annotation_type
+    checkpoint_path = args.checkpoint_path
 
     print('\nThe following arguments were read:')
     print('------------------------------------')
@@ -81,6 +85,7 @@ if __name__ == '__main__':
     print('training_batch_size:     {0}'.format(training_batch_size))
     print('learning_rate:           {0}'.format(learning_rate))
     print('annotation_type:         {0}'.format(annotation_type))
+    print('checkpoint_path:         {0}'.format(checkpoint_path))
     print('------------------------------------')
     print('Proceed with training (y/n)')
     proceed = input()
@@ -127,6 +132,13 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(params, lr=learning_rate)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
 
+    start_epoch = 0
+    if checkpoint_path:
+        checkpoint = torch.load(checkpoint_path)
+        model.load_state_dict(checkpoint['model'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        start_epoch = checkpoint['epoch'] + 1
+
     # we move the model to the correct device before training
     model.to(device)
 
@@ -139,13 +151,18 @@ if __name__ == '__main__':
         print('Creating model directory {0}'.format(model_path))
         os.mkdir(model_path)
 
-    print('Training model for {0} epochs'.format(num_epochs))
-    for epoch in range(num_epochs):
+    print('Training will start from epoch {0}'.format(start_epoch))
+    print('Training model for {0} epochs'.format(num_epochs - start_epoch))
+    for epoch in range(start_epoch, num_epochs):
         train_one_epoch(model, optimizer, data_loader_train, device, epoch,
                         print_freq=10, loss_file_name=train_loss_file_path)
         lr_scheduler.step()
         validate_one_epoch(model, data_loader_val, device, epoch,
                            print_freq=10, loss_file_name=val_loss_file_path)
 
-        torch.save(model.state_dict(), os.path.join(model_path, 'model_{0}.pt'.format(epoch)))
+        checkpoint = {}
+        checkpoint['model'] = model.state_dict()
+        checkpoint['optimizer'] = optimizer.state_dict()
+        checkpoint['epoch'] = epoch
+        torch.save(checkpoint, os.path.join(model_path, 'model_{0}.pt'.format(epoch)))
     print('Training done')
