@@ -126,6 +126,8 @@ if __name__ == '__main__':
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     model = utils.get_model(num_classes)
+    # we move the model to the correct device before training
+    model.to(device)
 
     # we now define an optimiser, and train
     params = [p for p in model.parameters() if p.requires_grad]
@@ -138,9 +140,6 @@ if __name__ == '__main__':
         model.load_state_dict(checkpoint['model'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         start_epoch = checkpoint['epoch'] + 1
-
-    # we move the model to the correct device before training
-    model.to(device)
 
     # we clear the files in which the training and validation losses are saved
     open(train_loss_file_path, 'w').close()
